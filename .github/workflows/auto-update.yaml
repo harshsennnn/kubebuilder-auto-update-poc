@@ -3,7 +3,7 @@ name: Kubebuilder Auto Update POC
 on:
   workflow_dispatch:
   schedule:
-    - cron: "0 0 * * 1"
+    - cron: "0 0 * * 1" # Runs every Monday at midnight UTC
 
 jobs:
   auto-update:
@@ -23,11 +23,25 @@ jobs:
         run: |
           curl -L https://github.com/kubernetes-sigs/kubebuilder/releases/download/v4.1.0/kubebuilder_linux_amd64 -o kubebuilder
           chmod +x kubebuilder
-          sudo mv kubebuilder /usr/local/bin/
+          sudo mv kubebuilder /usr/local/bin/kubebuilder
+
+      - name: Configure Git
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
 
       - name: Run Kubebuilder Alpha Generate
         run: |
           kubebuilder alpha generate
+
+      - name: Commit Changes
+        run: |
+          git add .
+          if git diff --cached --quiet; then
+            echo "No changes to commit."
+            exit 0
+          fi
+          git commit -m "Auto-update: Re-scaffolded using Kubebuilder alpha generate"
 
       - name: Create Pull Request
         uses: peter-evans/create-pull-request@v6
