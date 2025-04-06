@@ -12,3 +12,9 @@ Automatically run `kubebuilder alpha generate` and create PRs when scaffolded fi
 cd user-defined-project
 kubebuilder alpha generate
 # then git diff to see changes
+```
+
+## 🚧 Limitations
+Doesn’t yet handle merge conflicts or preserve user changes
+
+## Work in progress
