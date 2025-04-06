@@ -3,7 +3,7 @@ name: Kubebuilder Auto Update POC
 on:
   workflow_dispatch:
   schedule:
-    - cron: "0 0 * * 1" 
+    - cron: "0 0 * * 1"
 
 jobs:
   auto-update:
@@ -17,12 +17,7 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@v5
         with:
-          go-version: "1.21"
-
-      - name: Install Latest Kubebuilder CLI
-        run: |
-          curl -L https://github.com/kubernetes-sigs/kubebuilder/releases/latest/download/kubebuilder_linux_amd64 \
-          -o kubebuilder && chmod +x kubebuilder && sudo mv kubebuilder /usr/local/bin/kubebuilder
+          go-version: "1.23.3"
 
       - name: Run Kubebuilder Alpha Generate
         run: |
