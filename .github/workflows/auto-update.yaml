@@ -19,6 +19,12 @@ jobs:
         with:
           go-version: "1.23.3"
 
+      - name: Install Kubebuilder
+        run: |
+          curl -L https://github.com/kubernetes-sigs/kubebuilder/releases/download/v4.1.0/kubebuilder_linux_amd64 -o kubebuilder
+          chmod +x kubebuilder
+          sudo mv kubebuilder /usr/local/bin/
+
       - name: Run Kubebuilder Alpha Generate
         run: |
           kubebuilder alpha generate
