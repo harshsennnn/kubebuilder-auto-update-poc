@@ -3,7 +3,7 @@ name: Update Kubebuilder Scaffold
 on:
   workflow_dispatch:
   schedule:
-    - cron: '0 0 * * 0' # Run weekly to check for new Kubebuilder versions
+    - cron: '0 0 * * 0' # Run weekly
 
 jobs:
   update-scaffold:
@@ -13,67 +13,73 @@ jobs:
       - name: Check out the repository
         uses: actions/checkout@v2
         with:
-          fetch-depth: 0  # Ensures the full history is checked out
+          fetch-depth: 0
 
       - name: Set up environment and dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y jq curl
+          sudo apt-get install -y jq curl tar
+
       - name: Read Kubebuilder version from PROJECT file
         id: read_version
         run: |
-          export INITIAL_VERSION=$(grep "clientVersion" PROJECT | awk '{print $2}')
-          echo "::set-output name=initial_version::$INITIAL_VERSION"
-      - name: Download and install the initial Kubebuilder version
+          VERSION=$(grep "clientVersion" PROJECT | awk '{print $2}')
+          echo "initial_version=$VERSION" >> $GITHUB_OUTPUT
+          echo "Initial Version: $VERSION"
+
+      - name: Download and install initial Kubebuilder version
         run: |
           curl -L https://github.com/kubernetes-sigs/kubebuilder/releases/download/${{ steps.read_version.outputs.initial_version }}/kubebuilder_${{ steps.read_version.outputs.initial_version }}_linux_amd64.tar.gz -o kubebuilder_initial.tar.gz
           tar -zxvf kubebuilder_initial.tar.gz
-          sudo mv kubebuilder /usr/local/kubebuilder_initial
-      - name: Generate initial scaffold in `scaffold_initial` directory
+          sudo mv kubebuilder_${{ steps.read_version.outputs.initial_version }}_linux_amd64 /usr/local/kubebuilder_initial
+
+      - name: Generate initial scaffold
         run: |
           mkdir scaffold_initial
           cp -r . scaffold_initial/
           cd scaffold_initial
-          /usr/local/kubebuilder_initial/bin/kubebuilder init
+          /usr/local/kubebuilder_initial/bin/kubebuilder init --domain=my.domain --repo=github.com/example/test-kubebuilder-poc
           cd ..
-      - name: Check for the latest Kubebuilder release
+
+      - name: Get latest Kubebuilder version
         id: get_latest_version
         run: |
-          export LATEST_VERSION=$(curl -s https://api.github.com/repos/kubernetes-sigs/kubebuilder/releases/latest | jq -r .tag_name)
-          echo "::set-output name=latest_version::$LATEST_VERSION"
-      - name: Download and install the latest Kubebuilder version
+          LATEST=$(curl -s https://api.github.com/repos/kubernetes-sigs/kubebuilder/releases/latest | jq -r .tag_name)
+          echo "latest_version=$LATEST" >> $GITHUB_OUTPUT
+          echo "Latest Version: $LATEST"
+
+      - name: Download and install latest Kubebuilder
         run: |
           curl -L https://github.com/kubernetes-sigs/kubebuilder/releases/download/${{ steps.get_latest_version.outputs.latest_version }}/kubebuilder_${{ steps.get_latest_version.outputs.latest_version }}_linux_amd64.tar.gz -o kubebuilder_latest.tar.gz
           tar -zxvf kubebuilder_latest.tar.gz
-          sudo mv kubebuilder /usr/local/kubebuilder_latest
-      - name: Generate updated scaffold in `scaffold_updated` directory
+          sudo mv kubebuilder_${{ steps.get_latest_version.outputs.latest_version }}_linux_amd64 /usr/local/kubebuilder_latest
+
+      - name: Generate updated scaffold
         run: |
           mkdir scaffold_updated
           cp -r . scaffold_updated/
           cd scaffold_updated
-          /usr/local/kubebuilder_latest/bin/kubebuilder init
+          /usr/local/kubebuilder_latest/bin/kubebuilder init --domain=my.domain --repo=github.com/example/test-kubebuilder-poc
           cd ..
-      - name: Copy current project into `scaffold_current` directory
+
+      - name: Copy current project
         run: |
           mkdir scaffold_current
           cp -r . scaffold_current/
-      - name: Perform three-way merge with scaffolds
+
+      - name: Copy updated scaffold (simulate overwrite)
         run: |
-          # Create a temporary directory to hold the final merged version
-          mkdir merged_scaffold
-          # Run three-way merge using scaffold_initial, scaffold_current, and scaffold_updated
-          # Adjusting merge strategy and paths to use directories
-          diff3 -m scaffold_current scaffold_initial scaffold_updated > merged_scaffold/merged_files
-      - name: Copy merged files back to main directory
-        run: |
-          cp -r merged_scaffold/* .
+          cp -r scaffold_updated/* .
+          git config user.name github-actions
+          git config user.email github-actions@github.com
           git add .
-          git commit -m "Three-way merge with Kubebuilder updates and custom code"
+          git commit -m "Update scaffold using Kubebuilder ${{ steps.get_latest_version.outputs.latest_version }}" || echo "No changes to commit"
+
       - name: Create Pull Request
         uses: peter-evans/create-pull-request@v3
         with:
           commit-message: "Update scaffold to Kubebuilder ${{ steps.get_latest_version.outputs.latest_version }}"
           title: "Update scaffold to Kubebuilder ${{ steps.get_latest_version.outputs.latest_version }}"
           body: |
-            This pull request updates the scaffold with the latest Kubebuilder version ${{ steps.get_latest_version.outputs.latest_version }}.
+            This PR updates the Kubebuilder scaffold from ${{ steps.read_version.outputs.initial_version }} to ${{ steps.get_latest_version.outputs.latest_version }}.
           branch: kubebuilder-update-${{ steps.get_latest_version.outputs.latest_version }}
