@@ -23,9 +23,7 @@ jobs:
       - name: Read Kubebuilder version from PROJECT file
         id: read_version
         run: |
-          VERSION=$(grep "clientVersion" PROJECT | awk '{print $2}')
-          echo "initial_version=$VERSION" >> $GITHUB_OUTPUT
-          echo "Initial Version: $VERSION"
+          echo "initial_version=$(grep 'clientVersion' PROJECT | awk '{print $2}')" >> $GITHUB_OUTPUT
 
       - name: Download and install initial Kubebuilder version
         run: |
