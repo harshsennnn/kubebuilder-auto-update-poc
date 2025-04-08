@@ -7,3 +7,5 @@ Self Implementation of [WIP proposal](https://github.com/kubernetes-sigs/kubebui
 
 ## Current Status
 This is a mock repo to test out the implemntatinos and figure-out logics and stratergies to achieve this goal!
+
+## Working in Progress
