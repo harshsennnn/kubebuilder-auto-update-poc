@@ -1,20 +1,9 @@
 # Kubebuilder Auto-Update PoC
 
 ## 🎯 Objective
-Automatically run `kubebuilder alpha generate` and create PRs when scaffolded files change — paving the way for AI-based conflict resolution.
+Automatically runs `kubebuilder alpha generate` and automate the updation project when a new version is release.
 
-## ⚙️ How It Works
-- A GitHub Action runs `kubebuilder alpha generate` inside `user-defined-project/`
-- If there are changes, it creates a PR with updated scaffolding
+Self Implementation of [WIP proposal](https://github.com/kubernetes-sigs/kubebuilder/pull/4302)
 
-## 🧪 How to Test Locally
-```bash
-cd user-defined-project
-kubebuilder alpha generate
-# then git diff to see changes
-```
-
-## 🚧 Limitations
-Doesn’t yet handle merge conflicts or preserve user changes
-
-## Work in progress
+## Current Status
+This is a mock repo to test out the implemntatinos and figure-out logics and stratergies to achieve this goal!
